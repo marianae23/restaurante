@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "nome": "Bife à portuguesa",
+        "preco": 12.5,
+        "categoria": "Prato Principal"
+    },
+    {
+        "id": 2,
+        "nome": "Sopa de legumes",
+        "preco": 3.5,
+        "categoria": "Entrada"
+    },
+    {
+        "id": 3,
+        "nome": "Tarte de maçã",
+        "preco": 4.0,
+        "categoria": "Sobremesa"
+    }
+]
