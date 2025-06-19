@@ -110,6 +110,29 @@ def consultar_reservas(nome_cliente):
     for i, r in enumerate(minhas_reservas, 1):
         print(f"{i}. Data: {r['data']} - Hora: {r['hora']} - Pessoas: {r['pessoas']}")
 
+def cancelar_reserva(nome_cliente):
+    print("\n--- CANCELAR RESERVA ---")
+    data = input("Informe a data da reserva a cancelar (AAAA-MM-DD): ")
+
+    try:
+        with open(RESERVAS_PATH, "r", encoding="utf-8") as f:
+            reservas = json.load(f)
+    except FileNotFoundError:
+        print("❌ Nenhuma reserva encontrada.")
+        return
+
+    reservas_antes = len(reservas)
+    reservas = [r for r in reservas if not (r["cliente"].lower() == nome_cliente.lower() and r["data"] == data)]
+
+    if len(reservas) == reservas_antes:
+        print("❌ Reserva não encontrada para esse nome e data.")
+        return
+
+    with open(RESERVAS_PATH, "w", encoding="utf-8") as f:
+        json.dump(reservas, f, indent=2, ensure_ascii=False)
+
+    print("✅ Reserva cancelada com sucesso!")
+
 def menu_cliente():
     nome = input("Digite seu nome: ")
     while True:
@@ -118,6 +141,7 @@ def menu_cliente():
         print("2. Reservar mesa")
         print("3. Fazer pedido online")
         print("4. Consultar reservas feitas")
+        print("5. Cancelar reserva")
         print("0. Sair")
         opcao = input("Escolha uma opção: ")
 
@@ -129,6 +153,8 @@ def menu_cliente():
             fazer_pedido_online(nome)
         elif opcao == "4":
             consultar_reservas(nome)
+        elif opcao == "5":
+            cancelar_reserva(nome)
         elif opcao == "0":
             print("Volte sempre!")
             break
