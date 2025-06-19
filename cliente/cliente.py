@@ -1,165 +1,175 @@
 import json
 from datetime import datetime
-from menu import carregar_menu
 
-MENU_PATH = "../menu.json"
+MENU_PATH = "menu.json"
 RESERVAS_PATH = "reservas.json"
 PEDIDOS_PATH = "pedidos.json"
+AVALIACOES_PATH = "avaliacoes.json"
 
 def ver_menu():
-    print("\n--- MENU DO RESTAURANTE ---")
     try:
-        menu = carregar_menu()
-        for i, item in enumerate(menu):
-            print(f"{i + 1}. {item['nome']} - €{item['preco']:.2f}")
+        with open(MENU_PATH, "r", encoding="utf-8") as f:
+            menu = json.load(f)
+        print("\n--- MENU ---")
+        for item in menu:
+            print(f"{item['id']}. {item['nome']} - €{item['preco']:.2f}")
     except FileNotFoundError:
-        print("❌ Menu não encontrado.")
+        print("❌ Menu não disponível no momento.")
 
-def fazer_reserva(nome_cliente):
-    print("\n--- RESERVAR MESA ---")
-    data = input("Data da reserva (AAAA-MM-DD): ")
-    hora = input("Hora da reserva (HH:MM): ")
-    pessoas = input("Número de pessoas: ")
-
+def reservar_mesa(nome):
+    data = input("Digite a data da reserva (YYYY-MM-DD): ")
+    hora = input("Digite a hora da reserva (HH:MM): ")
     try:
-        datetime.strptime(f"{data} {hora}", "%Y-%m-%d %H:%M")
-    except ValueError:
-        print("❌ Data ou hora inválida.")
-        return
+        reservas = []
+        try:
+            with open(RESERVAS_PATH, "r", encoding="utf-8") as f:
+                reservas = json.load(f)
+        except FileNotFoundError:
+            pass
+        reserva = {
+            "cliente": nome,
+            "data": data,
+            "hora": hora
+        }
+        reservas.append(reserva)
+        with open(RESERVAS_PATH, "w", encoding="utf-8") as f:
+            json.dump(reservas, f, indent=2, ensure_ascii=False)
+        print("✅ Reserva feita com sucesso!")
+    except Exception as e:
+        print(f"❌ Erro ao salvar reserva: {e}")
 
-    nova_reserva = {
-        "cliente": nome_cliente,
-        "data": data,
-        "hora": hora,
-        "pessoas": pessoas
-    }
+def consultar_reservas(nome):
+    try:
+        with open(RESERVAS_PATH, "r", encoding="utf-8") as f:
+            reservas = json.load(f)
+        reservas_cliente = [r for r in reservas if r["cliente"].lower() == nome.lower()]
+        if reservas_cliente:
+            print("\n--- Suas reservas ---")
+            for r in reservas_cliente:
+                print(f"Data: {r['data']}, Hora: {r['hora']}")
+        else:
+            print("Você não tem reservas.")
+    except FileNotFoundError:
+        print("Nenhuma reserva encontrada.")
 
+def cancelar_reserva(nome):
     try:
         with open(RESERVAS_PATH, "r", encoding="utf-8") as f:
             reservas = json.load(f)
     except FileNotFoundError:
-        reservas = []
-
-    reservas.append(nova_reserva)
-
+        print("Nenhuma reserva encontrada.")
+        return
+    reservas_cliente = [r for r in reservas if r["cliente"].lower() == nome.lower()]
+    if not reservas_cliente:
+        print("Você não tem reservas para cancelar.")
+        return
+    print("\n--- Suas reservas ---")
+    for i, r in enumerate(reservas_cliente, 1):
+        print(f"{i}. Data: {r['data']}, Hora: {r['hora']}")
+    escolha = input("Escolha o número da reserva para cancelar: ")
+    try:
+        idx = int(escolha) - 1
+        if idx < 0 or idx >= len(reservas_cliente):
+            print("Escolha inválida.")
+            return
+    except ValueError:
+        print("Entrada inválida.")
+        return
+    reserva_a_cancelar = reservas_cliente[idx]
+    reservas = [r for r in reservas if r != reserva_a_cancelar]
     with open(RESERVAS_PATH, "w", encoding="utf-8") as f:
         json.dump(reservas, f, indent=2, ensure_ascii=False)
+    print("Reserva cancelada com sucesso!")
 
-    print("✅ Reserva feita com sucesso!")
-
-def fazer_pedido_online(nome_cliente):
-    menu = carregar_menu()
-    pedido = []
-
-    print("\n--- FAZER PEDIDO ONLINE ---")
-    for i, item in enumerate(menu):
-        print(f"{i + 1}. {item['nome']} - €{item['preco']:.2f}")
-
-    while True:
-        escolha = input("Digite o número do prato (ou ENTER para finalizar): ")
-        if escolha == "":
-            break
-        try:
-            idx = int(escolha) - 1
-            if 0 <= idx < len(menu):
-                pedido.append(menu[idx])
-                print(f"✔ {menu[idx]['nome']} adicionado.")
-            else:
-                print("Número inválido.")
-        except ValueError:
-            print("Entrada inválida.")
-
-    if not pedido:
-        print("❌ Nenhum item selecionado.")
-        return
-
-    total = sum(item["preco"] for item in pedido)
-
+def avaliar_pedido(nome_cliente):
+    print("\n--- AVALIAR PEDIDO ---")
     try:
         with open(PEDIDOS_PATH, "r", encoding="utf-8") as f:
             pedidos = json.load(f)
     except FileNotFoundError:
-        pedidos = []
+        print("❌ Nenhum pedido encontrado.")
+        return
 
-    pedidos.append({
+    pedidos_cliente = [p for p in pedidos if p["cliente"].lower() == nome_cliente.lower()]
+
+    if not pedidos_cliente:
+        print("❌ Você não tem pedidos para avaliar.")
+        return
+
+    for i, pedido in enumerate(pedidos_cliente, 1):
+        itens_str = ", ".join(item["nome"] for item in pedido["itens"])
+        print(f"{i}. Pedido com itens: {itens_str} - Total: €{pedido['total']:.2f}")
+
+    escolha = input("Escolha o número do pedido que quer avaliar: ")
+    try:
+        idx = int(escolha) - 1
+        if idx < 0 or idx >= len(pedidos_cliente):
+            print("❌ Escolha inválida.")
+            return
+    except ValueError:
+        print("❌ Entrada inválida.")
+        return
+
+    nota = input("Digite a nota para o pedido (1 a 5): ")
+    try:
+        nota_int = int(nota)
+        if nota_int < 1 or nota_int > 5:
+            print("❌ Nota deve ser entre 1 e 5.")
+            return
+    except ValueError:
+        print("❌ Nota inválida.")
+        return
+
+    comentario = input("Deixe um comentário sobre o pedido: ")
+
+    avaliacao = {
         "cliente": nome_cliente,
-        "itens": pedido,
-        "total": total
-    })
-
-    with open(PEDIDOS_PATH, "w", encoding="utf-8") as f:
-        json.dump(pedidos, f, indent=2, ensure_ascii=False)
-
-    print(f"✅ Pedido realizado com sucesso! Total: €{total:.2f}")
-
-def consultar_reservas(nome_cliente):
-    print("\n--- MINHAS RESERVAS ---")
-    try:
-        with open(RESERVAS_PATH, "r", encoding="utf-8") as f:
-            reservas = json.load(f)
-    except FileNotFoundError:
-        print("❌ Nenhuma reserva encontrada.")
-        return
-
-    minhas_reservas = [r for r in reservas if r["cliente"].lower() == nome_cliente.lower()]
-
-    if not minhas_reservas:
-        print("🔍 Nenhuma reserva encontrada para este nome.")
-        return
-
-    for i, r in enumerate(minhas_reservas, 1):
-        print(f"{i}. Data: {r['data']} - Hora: {r['hora']} - Pessoas: {r['pessoas']}")
-
-def cancelar_reserva(nome_cliente):
-    print("\n--- CANCELAR RESERVA ---")
-    data = input("Informe a data da reserva a cancelar (AAAA-MM-DD): ")
+        "pedido_id": idx,  # Considerar aprimorar com ID real do pedido
+        "nota": nota_int,
+        "comentario": comentario,
+        "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
 
     try:
-        with open(RESERVAS_PATH, "r", encoding="utf-8") as f:
-            reservas = json.load(f)
+        with open(AVALIACOES_PATH, "r", encoding="utf-8") as f:
+            avaliacoes = json.load(f)
     except FileNotFoundError:
-        print("❌ Nenhuma reserva encontrada.")
-        return
+        avaliacoes = []
 
-    reservas_antes = len(reservas)
-    reservas = [r for r in reservas if not (r["cliente"].lower() == nome_cliente.lower() and r["data"] == data)]
+    avaliacoes.append(avaliacao)
 
-    if len(reservas) == reservas_antes:
-        print("❌ Reserva não encontrada para esse nome e data.")
-        return
+    with open(AVALIACOES_PATH, "w", encoding="utf-8") as f:
+        json.dump(avaliacoes, f, indent=2, ensure_ascii=False)
 
-    with open(RESERVAS_PATH, "w", encoding="utf-8") as f:
-        json.dump(reservas, f, indent=2, ensure_ascii=False)
-
-    print("✅ Reserva cancelada com sucesso!")
+    print("✅ Obrigado pela avaliação!")
 
 def menu_cliente():
     nome = input("Digite seu nome: ")
     while True:
-        print("\n--- MENU DO CLIENTE ---")
+        print("\n--- MENU CLIENTE ---")
         print("1. Ver menu")
-        print("2. Reservar mesa")
-        print("3. Fazer pedido online")
-        print("4. Consultar reservas feitas")
-        print("5. Cancelar reserva")
-        print("0. Sair")
+        print("2. Fazer reserva")
+        print("3. Consultar reservas")
+        print("4. Cancelar reserva")
+        print("5. Sair")
+        print("6. Avaliar pedido")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
             ver_menu()
         elif opcao == "2":
-            fazer_reserva(nome)
+            reservar_mesa(nome)
         elif opcao == "3":
-            fazer_pedido_online(nome)
-        elif opcao == "4":
             consultar_reservas(nome)
-        elif opcao == "5":
+        elif opcao == "4":
             cancelar_reserva(nome)
-        elif opcao == "0":
-            print("Volte sempre!")
+        elif opcao == "6":
+            avaliar_pedido(nome)
+        elif opcao == "5":
+            print("Até logo!")
             break
         else:
-            print("❌ Opção inválida.")
+            print("Opção inválida. Tente novamente.")
 
 if __name__ == "__main__":
     menu_cliente()
