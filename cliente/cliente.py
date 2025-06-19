@@ -92,6 +92,24 @@ def fazer_pedido_online(nome_cliente):
 
     print(f"✅ Pedido realizado com sucesso! Total: €{total:.2f}")
 
+def consultar_reservas(nome_cliente):
+    print("\n--- MINHAS RESERVAS ---")
+    try:
+        with open(RESERVAS_PATH, "r", encoding="utf-8") as f:
+            reservas = json.load(f)
+    except FileNotFoundError:
+        print("❌ Nenhuma reserva encontrada.")
+        return
+
+    minhas_reservas = [r for r in reservas if r["cliente"].lower() == nome_cliente.lower()]
+
+    if not minhas_reservas:
+        print("🔍 Nenhuma reserva encontrada para este nome.")
+        return
+
+    for i, r in enumerate(minhas_reservas, 1):
+        print(f"{i}. Data: {r['data']} - Hora: {r['hora']} - Pessoas: {r['pessoas']}")
+
 def menu_cliente():
     nome = input("Digite seu nome: ")
     while True:
@@ -99,6 +117,7 @@ def menu_cliente():
         print("1. Ver menu")
         print("2. Reservar mesa")
         print("3. Fazer pedido online")
+        print("4. Consultar reservas feitas")
         print("0. Sair")
         opcao = input("Escolha uma opção: ")
 
@@ -108,6 +127,8 @@ def menu_cliente():
             fazer_reserva(nome)
         elif opcao == "3":
             fazer_pedido_online(nome)
+        elif opcao == "4":
+            consultar_reservas(nome)
         elif opcao == "0":
             print("Volte sempre!")
             break
