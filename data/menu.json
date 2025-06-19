@@ -1,20 +1,23 @@
 [
-    {
-        "id": 1,
-        "nome": "Bife à portuguesa",
-        "preco": 12.5,
-        "categoria": "Prato Principal"
-    },
-    {
-        "id": 2,
-        "nome": "Sopa de legumes",
-        "preco": 3.5,
-        "categoria": "Entrada"
-    },
-    {
-        "id": 3,
-        "nome": "Tarte de maçã",
-        "preco": 4.0,
-        "categoria": "Sobremesa"
-    }
+  {
+    "id": 1,
+    "nome": "Salada Caesar",
+    "descricao": "Salada com alface, croutons e molho Caesar",
+    "preco": 15.0,
+    "categoria": "Entradas"
+  },
+  {
+    "id": 2,
+    "nome": "Bife à parmegiana",
+    "descricao": "Bife com molho de tomate e queijo gratinado",
+    "preco": 35.0,
+    "categoria": "Pratos principais"
+  },
+  {
+    "id": 3,
+    "nome": "Sorvete de chocolate",
+    "descricao": "Sobremesa gelada sabor chocolate",
+    "preco": 10.0,
+    "categoria": "Sobremesas"
+  }
 ]

@@ -17,6 +17,26 @@ def ver_menu():
     for prato in menu:
         print(f"{prato['nome']} - €{prato['preco']:.2f}")
 
+def ver_menu_por_categoria():
+    try:
+        with open(MENU_PATH, "r", encoding="utf-8") as f:
+            menu = json.load(f)
+    except FileNotFoundError:
+        print("❌ Menu não disponível no momento.")
+        return
+    categorias = set(prato.get("categoria", "Outros") for prato in menu)
+    print("\nCategorias disponíveis:")
+    for cat in categorias:
+        print(f"- {cat}")
+    categoria_escolhida = input("Digite a categoria para filtrar: ").strip()
+    pratos_filtrados = [prato for prato in menu if prato.get("categoria", "").lower() == categoria_escolhida.lower()]
+    if not pratos_filtrados:
+        print(f"Nenhum prato encontrado na categoria '{categoria_escolhida}'.")
+        return
+    print(f"\n--- MENU - Categoria: {categoria_escolhida} ---")
+    for prato in pratos_filtrados:
+        print(f"{prato['nome']} - €{prato['preco']:.2f}")
+
 def reservar_mesa(nome_cliente):
     data = input("Data da reserva (AAAA-MM-DD): ")
     hora = input("Hora da reserva (HH:MM): ")
@@ -149,28 +169,31 @@ def menu_cliente():
     nome = input("Digite seu nome: ")
     while True:
         print("\n--- MENU CLIENTE ---")
-        print("1. Ver menu")
-        print("2. Fazer reserva")
-        print("3. Consultar reservas")
-        print("4. Cancelar reserva")
-        print("5. Consultar histórico de pedidos")
-        print("6. Avaliar pedido")
-        print("7. Sair")
+        print("1. Ver menu completo")
+        print("2. Ver menu por categoria")
+        print("3. Fazer reserva")
+        print("4. Consultar reservas")
+        print("5. Cancelar reserva")
+        print("6. Consultar histórico de pedidos")
+        print("7. Avaliar pedido")
+        print("8. Sair")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
             ver_menu()
         elif opcao == "2":
-            reservar_mesa(nome)
+            ver_menu_por_categoria()
         elif opcao == "3":
-            consultar_reservas(nome)
+            reservar_mesa(nome)
         elif opcao == "4":
-            cancelar_reserva(nome)
+            consultar_reservas(nome)
         elif opcao == "5":
-            consultar_historico_pedidos(nome)
+            cancelar_reserva(nome)
         elif opcao == "6":
-            avaliar_pedido(nome)
+            consultar_historico_pedidos(nome)
         elif opcao == "7":
+            avaliar_pedido(nome)
+        elif opcao == "8":
             print("Até logo!")
             break
         else:
